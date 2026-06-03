@@ -10,7 +10,7 @@ Marlovious Boot uses rEFInd as a quiet UEFI boot layer with manual entries and P
 
 The system consists of three core components:
 
-**Boot Manager (rEFInd)** — Runs from an EFI system partition, configured with `use_nvram false` and `scanfor manual,external`. Boot entries are manually defined with PARTUUID-based volume identification when needed.
+**Boot Manager (rEFInd)** — Runs from an EFI system partition, configured with `use_nvram false` and `scanfor manual`. Boot entries are manually defined with PARTUUID-based volume identification.
 
 **OS Disks** — Each operating system can keep its own bootloader installed via `grub-install --removable` to the fallback EFI path `\EFI\BOOT\BOOTX64.EFI`. This keeps disks independently bootable.
 
@@ -41,6 +41,58 @@ EFI/BOOT/
 ```
 
 `boots.conf` contains the machine-specific menu entries. `blkids.example.txt` shows the `blkid` field to use when filling in a PARTUUID.
+
+## Deployment Pattern
+
+Install Marlovious Boot in the normal rEFInd directory:
+
+```text
+EFI/refind/
+  refind_x64.efi
+  refind.conf
+  boots.conf
+  themes/
+    marlovious.boot/
+```
+
+Also install it to the fallback path:
+
+```text
+EFI/BOOT/
+  BOOTX64.EFI
+  refind.conf
+  boots.conf
+  themes/
+    marlovious.boot/
+```
+
+Some firmware ignores or rewrites EFI boot order and keeps preferring a named OS entry, such as `debian`. On those machines, repoint the preferred NVRAM entry to rEFInd instead of relying on boot order alone:
+
+```bash
+sudo efibootmgr -b BOOTNUM -B
+sudo efibootmgr -c -d /dev/nvme0n1 -p 1 -L "debian" -l '\EFI\refind\refind_x64.efi'
+```
+
+The OS loader still stays available from `boots.conf`. Marlovious Boot becomes the rEFInd boot manager even if firmware insists on booting the old entry name.
+
+## PaneBot Node Example
+
+```conf
+menuentry "PaneBot Node" {
+    icon \EFI\refind\themes\marlovious.boot\icons\os_debian.png
+    volume PANEBOOT-ESP-PARTUUID-HERE
+    loader \EFI\debian\grubx64.efi
+    graphics on
+}
+
+menuentry "SteamOS" {
+    icon \EFI\refind\themes\marlovious.boot\icons\os_steam.png
+    volume STEAMOS-ESP-PARTUUID-HERE
+    loader \EFI\steamos\steamcl.efi
+    options "quiet splash"
+    graphics on
+}
+```
 
 ## Current Status
 
