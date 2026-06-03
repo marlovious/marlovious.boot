@@ -1,0 +1,7 @@
+# Example blkid output.
+#
+# Use this to find the PARTUUID for a bootable EFI partition when creating a
+# manual rEFInd menuentry.
+#
+# Example:
+# /dev/sda1: UUID="D399-F732" BLOCK_SIZE="512" TYPE="vfat" PARTLABEL="ESP" PARTUUID="5cdb413c-1220-47f1-bd7d-fbfd721717c4"
